@@ -122,7 +122,7 @@ def send_message(to_user, access_token, city_name, weather, max_temperature, min
     # 星期几
     week = week_list[today.weekday()]
     # 开学的第几周
-    weeks = get_Today_Week()
+
     # 获取在一起的日子的日期格式
     love_year = int(config.love_date.split("-")[0])
     love_month = int(config.love_date.split("-")[1])
@@ -145,7 +145,6 @@ def send_message(to_user, access_token, city_name, weather, max_temperature, min
         birth_date = year_date
         birth_day = str(birth_date.__sub__(today)).split(" ")[0]
 
-    theClass = get_Today_Class()
     theuser = to_user[0]
     data = {
         "touser": theuser,
@@ -153,10 +152,6 @@ def send_message(to_user, access_token, city_name, weather, max_temperature, min
         "url": "http://weixin.qq.com/download",
         "topcolor": "#FF0000",
         "data": {
-            "weeks": {
-                "value": weeks,
-                "color": "#00FFFF"
-            },
             "date": {
                 "value": "{} {}".format(today, week),
                 "color": "#00FFFF"
@@ -185,30 +180,6 @@ def send_message(to_user, access_token, city_name, weather, max_temperature, min
                 "value": birth_day,
                 "color": "#FF8000"
             },
-            "firstClass": {
-                "value": theClass[0],
-                "color": "#FF8000"
-            },
-            "secondClass": {
-                "value": theClass[1],
-                "color": "#FF8000"
-            },
-            "thirdClass": {
-                "value": theClass[2],
-                "color": "#FF8000"
-            },
-            "fourthClass": {
-                "value": theClass[3],
-                "color": "#FF8000"
-            },
-            "fifthClass": {
-                "value": theClass[4],
-                "color": "#FF8000"
-            },
-            "sixthClass": {
-                "value": theClass[5],
-                "color": "#FF8000"
-            }
         }
     }
     headers = {
@@ -262,19 +233,6 @@ def send_Good_Night(to_user, access_token):
     print("r:", r.text)
     good_Night = r.json()["newslist"][0]["content"]
     # good_Night = "晚安"
-    # 获取第二天课表
-    year = localtime().tm_year
-    month = localtime().tm_mon
-    day = localtime().tm_mday
-    today = datetime.date(datetime(year=year, month=month, day=day))
-    weekClasses = get_Week_Classes(None)
-    week = week_list[(today.weekday() + 1) % 7]
-    theClass = []
-    if (today.weekday() + 1) % 7 == 0:
-        weekClasses = get_Week_Classes(get_Today_Week())
-        theClass = weekClasses[0]
-    else:
-        theClass = weekClasses[today.weekday() + 1]
 
     url = "https://api.weixin.qq.com/cgi-bin/message/template/send?access_token={}".format(access_token)
     theuser = to_user[0]
@@ -287,34 +245,6 @@ def send_Good_Night(to_user, access_token):
             "goodNight": {
                 "value": good_Night,
                 "color": "#87CEEB"
-            },
-            "week": {
-                "value": week,
-                "color": "#00FFFF"
-            },
-            "firstClass": {
-                "value": theClass[0],
-                "color": "#FF8000"
-            },
-            "secondClass": {
-                "value": theClass[1],
-                "color": "#FF8000"
-            },
-            "thirdClass": {
-                "value": theClass[2],
-                "color": "#FF8000"
-            },
-            "fourthClass": {
-                "value": theClass[3],
-                "color": "#FF8000"
-            },
-            "fifthClass": {
-                "value": theClass[4],
-                "color": "#FF8000"
-            },
-            "sixthClass": {
-                "value": theClass[5],
-                "color": "#FF8000"
             }
         }
     }
@@ -350,33 +280,6 @@ if __name__ == '__main__':
     if datetime.now().strftime('%H:%M:%S') < config.post_Time:
         send_message(user, accessToken, city, weather, max_temperature, min_temperature)
         isPost = True
-    # 课程提醒推送
-    todayClasses = get_Today_Class()
-    time_table = config.time_table
-    for i in range(len(time_table)):
-        if isPost:
-            break
-        reminderTime = time_table[i]
-        while True:
-            nowTime = datetime.now().strftime('%H:%M:%S')
-            print("当前时间:", nowTime)
-            if reminderTime == nowTime:
-                if len(todayClasses[i]) != 0:
-                    classInfo = "课程信息: " + todayClasses[i] + "\n" + "上课时间: " + config.course_Time[i] + "\n"
-                    print(classInfo)
-                    send_Class_Message(user, accessToken, classInfo)
-                    print("课程信息推送成功！")
-                isPost = True
-                break
-            elif reminderTime < nowTime:
-                break
-            # 通过睡眠定时
-            defference = calculate_Time_Difference(reminderTime, nowTime) - 3
-            print("课程推送时间差：", defference, "秒")
-            if defference > 0:
-                print("开始睡眠: 等待推送第", i + 1, "讲课")
-                time.sleep(defference)
-                print("结束睡眠")
     while True:
         goodNightTime = config.good_Night_Time
         nowTime = datetime.now().strftime('%H:%M:%S')
